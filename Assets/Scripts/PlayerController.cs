@@ -17,29 +17,40 @@ public class PlayerController : MonoBehaviour
     [Range(0,20)]
     public float jumpHeight = 10;
     public LayerMask groundLayer;
-
+    public Animator anim;
+    public bool gameOver = false;
+    public GameObject playerModel;
+    public GameObject playerRagdoll;
 
     // Start is called before the first frame update
     void Start()
     {
         rb = GetComponent<Rigidbody>();
+        
     }
 
     // Update is called once per frame
     void Update()
     {
-        h = DampenValue(h, moveDir.x);
-        v = DampenValue(v, moveDir.y);
+        if (!gameOver)
+        {
+            h = DampenValue(h, moveDir.x);
+            v = DampenValue(v, moveDir.y);
 
-        inputVector = new Vector3(h * speed, rb.velocity.y, v * speed);
-        transform.LookAt(transform.position + new Vector3(inputVector.x, 0, inputVector.z));
-        rb.velocity = inputVector;
-        Debug.DrawRay(transform.position, transform.forward * 7, Color.green);
+            inputVector = new Vector3(h * speed, rb.velocity.y, v * speed);
+            transform.LookAt(transform.position + new Vector3(inputVector.x, 0, inputVector.z));
+            rb.velocity = inputVector;
+            anim.SetFloat("Moving", moveDir.magnitude);
+            Debug.DrawRay(transform.position, transform.forward * 7, Color.green);
+        }
+
+
+
     }
 
     public void MovePlayer(InputAction.CallbackContext ctx)
     {
-        Debug.Log(ctx.ReadValue<Vector2>());
+        //Debug.Log(ctx.ReadValue<Vector2>());
         moveDir = ctx.ReadValue<Vector2>();
     }
 
@@ -48,6 +59,7 @@ public class PlayerController : MonoBehaviour
         if (GroundCheck())
         {
             rb.AddForce(Vector3.up * jumpHeight, ForceMode.Impulse);
+            anim.SetTrigger("Jump");
         }
     }
 
@@ -68,5 +80,12 @@ public class PlayerController : MonoBehaviour
     {
         float dist = GetComponent<Collider>().bounds.extents.y + 0.1f;
         Debug.DrawRay(transform.position, Vector3.down * dist, Color.blue);
+    }
+    public void PlayerDead()
+    {
+        gameObject.GetComponent<Collider>().enabled = false;
+        rb.useGravity = false;
+        playerModel.SetActive(false);
+        playerRagdoll.SetActive(true);
     }
 }
